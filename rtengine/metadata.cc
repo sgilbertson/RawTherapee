@@ -139,6 +139,7 @@ Exiv2Metadata::Exiv2Metadata(const Glib::ustring &path):
     exif_(new rtengine::procparams::ExifPairs),
     iptc_(new rtengine::procparams::IPTCPairs)
 {
+    std::clog << "Exiv2Metadata::Exiv2Metadata(" << path << "): merge_xmp_=" << merge_xmp_ << std::endl;
 }
 
 
@@ -154,15 +155,18 @@ Exiv2Metadata::Exiv2Metadata(const Glib::ustring &path, bool merge_xmp_sidecar):
 
 void Exiv2Metadata::load() const
 {
+    std::clog << "Exiv2Metadata::load() src_=" << src_ << ", merge_xmp_=" << merge_xmp_ << std::endl;
     if (!src_.empty() && !image_.get() && Glib::file_test(src_.c_str(), Glib::FILE_TEST_EXISTS)) {
         CacheVal val;
         auto finfo = Gio::File::create_for_path(src_)->query_info(G_FILE_ATTRIBUTE_TIME_MODIFIED);
         Glib::TimeVal xmp_mtime(0, 0);
         if (merge_xmp_) {
             auto xmpname = xmpSidecarPath(src_);
+            std::clog << "Exiv2Metadata::load xmpname=" << xmpname << std::endl;
             if (Glib::file_test(xmpname.c_str(), Glib::FILE_TEST_EXISTS)) {
+                std::clog << "Exiv2Metadata::load XMP file exists" << std::endl;
                 xmp_mtime = Gio::File::create_for_path(xmpname)->query_info(G_FILE_ATTRIBUTE_TIME_MODIFIED)->modification_time();
-            }
+            } else std::clog << "Exiv2Metadata::load XMP file does not exist" << std::endl;
         }
 
         if (cache_ && cache_->get(src_, val) && val.image_mtime >= finfo->modification_time() && val.use_xmp == merge_xmp_ && val.xmp_mtime >= xmp_mtime) {
@@ -206,7 +210,13 @@ const Exiv2::IptcData& Exiv2Metadata::iptcData() const
 
 Exiv2::XmpData& Exiv2Metadata::xmpData()
 {
-    return image_.get() ? image_->xmpData() : xmp_data_;
+    std::clog << "Exiv2Metadata::xmpData: " << (image_.get() ? "exists for image" : "does not exist for image") << std::endl;
+    auto & rval = image_.get() ? image_->xmpData() : xmp_data_;
+    for (auto && x : rval)
+    {
+        std::clog << " -- " << x.key() << " = " << x.toString() << std::endl;   // FIXME: Why key=Xmp.xmp.Rating = 0 even when no rating has been set?
+    }
+    return rval;
 }
 
 const Exiv2::XmpData& Exiv2Metadata::xmpData() const
@@ -567,15 +577,16 @@ Glib::ustring Exiv2Metadata::xmpSidecarPath(const Glib::ustring &path)
     return fn + ".xmp";
 }
 
-
 Exiv2::XmpData Exiv2Metadata::getXmpSidecar(const Glib::ustring &path)
 {
     Exiv2::XmpData ret;
     auto fname = xmpSidecarPath(path);
+    std::clog << "Looking for sidecar file " << fname << " for " << path << std::endl;
     if (Glib::file_test(fname, Glib::FILE_TEST_EXISTS)) {
+        std::clog << "Sidecar exists" << std::endl;
         auto image = open_exiv2(fname, false);
         ret = image->xmpData();
-    }
+    } else std::clog << "Sidecar DOES NOT EXIST" << std::endl;
     return ret;
 }
 

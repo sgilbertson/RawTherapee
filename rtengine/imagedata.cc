@@ -435,10 +435,16 @@ FramesData::FramesData(const Glib::ustring &fname, time_t ts) :
 
         if (find_exif_tag("Exif.Image.Rating")) {
             rating = to_long(pos);
+            std::clog << "FramesData::FramesData(" << fname << ",ts) found Exif.Image.Rating = " << rating << std::endl;
         } else {
             auto it = meta.xmpData().findKey(Exiv2::XmpKey("Xmp.xmp.Rating"));
             if (it != meta.xmpData().end() && it->size()) {
                 rating = to_long(it);
+                std::clog << "FramesData::FramesData(" << fname << ",ts) found Xmp.xmp.Rating = " << rating << std::endl;
+            }
+            else
+            {
+                std::clog << "FramesData::FramesData(" << fname << ",ts) did not find Exif.Image.Rating or Xmp.xmp.Rating: rating = " << rating << std::endl;
             }
         }
 

@@ -1,3 +1,4 @@
+#include <iostream>
 /*
  *  This file is part of RawTherapee.
  *
@@ -179,6 +180,7 @@ Thumbnail::Thumbnail(CacheManager* cm, const Glib::ustring& fname, const std::st
 
 Glib::ustring Thumbnail::xmpSidecarPath(const Glib::ustring &imagePath)
 {
+    std::clog << "Thumbnail::xmpSidecarPath " << imagePath << std::endl;
     return rtengine::Exiv2Metadata::xmpSidecarPath(imagePath);
 }
 
@@ -196,6 +198,7 @@ void Thumbnail::_generateThumbnailImage ()
 
     // generate thumbnail image
     const std::string ext = getExtension(fname).lowercase();
+    std::clog << "Thumbnail::_generateThumbnailImage " << fname << std::endl;
 
     if (ext.empty()) {
         return;
@@ -1098,6 +1101,7 @@ int Thumbnail::getRank  () const
 
 void Thumbnail::setRank  (int rank)
 {
+    std::clog << "Thumbnail::setRank " << rank << " for " << fname << std::endl;
     pparams->rank = rank;
     pparamsValid = true;
 }
@@ -1241,6 +1245,7 @@ void Thumbnail::getCamWB(double& temp, double& green, rtengine::StandardObserver
 
 void Thumbnail::saveMetadata()
 {
+    std::clog << "Thumbnail::saveMetadata " << fname << std::endl;
     if (options.rtSettings.metadata_xmp_sync != rtengine::Settings::MetadataXmpSync::READ_WRITE) {
         return;
     }
